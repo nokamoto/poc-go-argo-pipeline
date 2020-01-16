@@ -34,6 +34,9 @@ func main() {
 					},
 				},
 			},
+			//PodGC: &wfv1.PodGC{
+			//	Strategy: wfv1.PodGCOnWorkflowSuccess,
+			//},
 		},
 	}
 
@@ -44,4 +47,6 @@ func main() {
 	}
 
 	fmt.Printf("Workflow %s submitted\n", createdWf.Name)
+
+	select {} // sleep forever
 }
