@@ -19,18 +19,71 @@ func main() {
 
 	namespace := "default"
 
+	value := "{{steps.generate-parameter.outputs.parameters.hello-param}}"
+
 	helloWorldWorkflow := wfv1.Workflow{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "hello-world-",
+			GenerateName: "output-parameter-",
 		},
 		Spec: wfv1.WorkflowSpec{
-			Entrypoint: "whalesay",
+			Entrypoint: "output-parameter",
 			Templates: []wfv1.Template{
+				{
+					Name: "output-parameter",
+					Steps: [][]wfv1.WorkflowStep{
+						{
+							{
+								Name:     "generate-parameter",
+								Template: "whalesay",
+							},
+						},
+						{
+							{
+								Name:     "consume-parameter",
+								Template: "print-message",
+								Arguments: wfv1.Arguments{
+									Parameters: []wfv1.Parameter{
+										{
+											Name:  "message",
+											Value: &value,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				{
 					Name: "whalesay",
 					Container: &corev1.Container{
 						Image:   "docker/whalesay:latest",
-						Command: []string{"cowsay", "hello world"},
+						Command: []string{"sh", "-c"},
+						Args:    []string{"echo -n hello world > /tmp/output.txt"},
+					},
+					Outputs: wfv1.Outputs{
+						Parameters: []wfv1.Parameter{
+							{
+								Name: "hello-param",
+								ValueFrom: &wfv1.ValueFrom{
+									Path: "/tmp/output.txt",
+								},
+							},
+						},
+					},
+				},
+				{
+					Name: "print-message",
+					Inputs: wfv1.Inputs{
+						Parameters: []wfv1.Parameter{
+							{
+								Name: "message",
+							},
+						},
+					},
+					Container: &corev1.Container{
+						Image:   "docker/whalesay:latest",
+						Command: []string{"cowsay"},
+						Args:    []string{"{{inputs.parameters.message}}"},
 					},
 				},
 			},
