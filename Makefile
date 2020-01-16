@@ -14,3 +14,4 @@ minikube: all argo
 	kubectl delete -f minikube.yaml || echo ignore error
 	kubectl wait --for=delete pod/example || echo ignore error
 	kubectl apply -f minikube.yaml
+	kubectl -n argo port-forward deployment/argo-ui 8001:8001
